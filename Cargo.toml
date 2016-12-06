@@ -1,0 +1,17 @@
+[package]
+name = "edabo"
+version = "0.1.0"
+authors = ["Wieland Hoffmann <themineo@gmail.com>"]
+build = "build.rs"
+
+[build-dependencies]
+serde_codegen = "0.8"
+
+[dependencies]
+clap = "2.19"
+chrono = { version = "0.2", features = ["serde"] }
+mpd = "0.0"
+serde = "0.8"
+serde_json = "0.8"
+uuid = { version = "0.3", features = ["serde", "v4"] }
+xdg = "2.0.0"
