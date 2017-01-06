@@ -15,3 +15,7 @@ serde = "0.8"
 serde_json = "0.8"
 uuid = { version = "0.3", features = ["serde", "v4"] }
 xdg = "2.0.0"
+
+[[bin]]
+name = "edabo"
+doc = false
