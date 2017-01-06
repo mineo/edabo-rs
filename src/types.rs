@@ -1,3 +1,4 @@
+use clap::App;
 use mpd::Song;
 use std::error::Error;
 
@@ -60,4 +61,16 @@ impl Playlist {
             timestamp: timestamp,
         }
     }
+}
+
+/// A trait for the subcommands used by the CLI entry point.
+pub trait Command {
+    /// The name to use for this command on the command line.
+    fn name(&self) -> &str;
+
+    /// Build a new `App` that parses this subcommand.
+    fn build_subcommand<'a, 'b>(&self) -> App<'a, 'b>;
+
+    /// Perform the action of this subcommand.
+    fn run(&self) -> ();
 }
