@@ -1,4 +1,5 @@
 use chrono::{DateTime, UTC};
+use linked_hash_map::LinkedHashMap;
 use std::option::Option;
 use uuid::Uuid;
 
@@ -16,7 +17,7 @@ pub struct Track {
 pub struct Playlist {
     name: String,
     description: Option<String>,
-    tracklist: Vec<Track>,
+    tracklist: LinkedHashMap<Uuid, Track>,
     timestamp: DateTime<UTC>,
     uuid: Uuid,
 

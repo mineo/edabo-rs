@@ -1,4 +1,5 @@
 extern crate clap;
+extern crate linked_hash_map;
 extern crate mpd;
 extern crate serde;
 extern crate serde_json;

@@ -50,13 +50,17 @@ impl Track {
 }
 
 impl Playlist {
-    pub fn new(name: String, description: Option<String>, tracklist: Vec<Track>) -> Playlist {
+    pub fn new(name: String, description: Option<String>, mut tracklist: Vec<Track>) -> Playlist {
         let uuid = Uuid::new_v4();
         let timestamp = UTC::now();
+        let mut track_hash_map = LinkedHashMap::with_capacity(tracklist.len());
+        for track in tracklist.drain(..) {
+            track_hash_map.insert(track.recording_id, track);
+        }
         Playlist {
             name: name,
             description: description,
-            tracklist: tracklist,
+            tracklist: track_hash_map,
             uuid: uuid,
             timestamp: timestamp,
         }
