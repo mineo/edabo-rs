@@ -1,7 +1,7 @@
 use clap::App;
 use mpd::Song;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde::de::{Error as SerdeError, MapVisitor, Visitor};
+use serde::de::{Error as SerdeDeError, MapVisitor, Visitor};
 use std::error::Error;
 use std::str;
 
@@ -110,7 +110,7 @@ impl Deserialize for Playlist {
                     }
 
                     fn visit_bytes<E>(&mut self, value: &[u8]) -> Result<Self::Value, E>
-                        where E: SerdeError {
+                        where E: SerdeDeError {
                         match value {
                             b"description" => Ok(Field::description),
                             b"timestamp" => Ok(Field::timestamp),
