@@ -1,0 +1,13 @@
+{
+  "tracklist": [
+    {
+      "releasetrackid": "d71b7b2d-075c-3c09-8a3f-d050b121f3ab",
+      "releaseid": "b6f23b8f-1b0f-4167-92e8-d276164e1019",
+      "recordingid": "fefd550f-b68e-4c11-b4d6-dfb4836a820e"
+    }
+  ],
+  "name": "foo",
+  "timestamp": "2015-02-19T13:23:46.083Z",
+  "description": null,
+  "uuid": "69149c42-dd5d-46c2-83bc-0fc801d35dbc"
+}

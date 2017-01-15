@@ -2,7 +2,13 @@ use clap::App;
 use mpd::Song;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{Error as SerdeDeError, MapVisitor, Visitor};
+use serde_json;
+use serde_json::error::Result as SerdeResult;
+use std::convert::From;
 use std::error::Error;
+use std::fs::File;
+use std::io::Error as IOError;
+use std::path::Path;
 use std::str;
 
 include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
@@ -53,6 +59,33 @@ impl Track {
 }
 
 impl Playlist {
+    pub fn from_file<P, E>(path: P) -> Result<Playlist, E>
+        where P: AsRef<Path>,
+              E: Error + 'static + From<IOError> + From<serde_json::Error>
+    {
+        // let file: File = File::open(path).unwrap();
+        // let pl: SerdeResult<Playlist> = serde_json::from_reader(file);
+        // pl.map_err(|e| From::from(e))
+
+        match File::open(path) {
+            Ok(file) => {
+                let des: SerdeResult<Playlist> = serde_json::from_reader(file);
+                match des {
+                    Ok(pl) => Ok(pl),
+                    Err(e) => Err(From::from(e))
+                }
+            }
+            ,
+            Err(e) => Err(From::from(e))
+        }
+    }
+
+    pub fn from_str<E>(s: &str) -> Result<Playlist, E>
+        where E: Error + 'static + From<serde_json::Error>
+    {
+        serde_json::from_str(s).map_err(|e| From::from(e))
+    }
+
     pub fn new(name: String, description: Option<String>, mut tracklist: Vec<Track>) -> Playlist {
         let uuid = Uuid::new_v4();
         let timestamp = UTC::now();
@@ -98,7 +131,7 @@ impl Deserialize for Playlist {
                 impl Visitor for FieldVisitor {
                     type Value = Field;
                     fn visit_str<E>(&mut self, value: &str) -> Result<Self::Value, E>
-                        where E: SerdeError {
+                        where E: SerdeDeError {
                         match value {
                             "name" => Ok(Field::name),
                             "description" => Ok(Field::description),
