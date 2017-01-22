@@ -13,7 +13,7 @@ pub struct Track {
     pub release_track_id: Option<Uuid>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug)]
 pub struct Playlist {
     pub name: String,
     pub description: Option<String>,

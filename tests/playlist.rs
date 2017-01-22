@@ -12,7 +12,7 @@ fn get_playlist() -> Playlist {
         recording_id: uuid::Uuid::parse_str("fefd550f-b68e-4c11-b4d6-dfb4836a820e").unwrap()
     };
 
-    Playlist::new("Current".to_string(),
+    Playlist::new("foo".to_string(),
                   None,
                   vec![track])
 }
@@ -27,7 +27,8 @@ fn playlist_roundtrip() {
 
 #[test]
 fn playlist_from_file() {
-    let expected = get_playlist();
+    let mut expected = get_playlist();
+    expected.uuid = uuid::Uuid::parse_str("69149c42-dd5d-46c2-83bc-0fc801d35dbc").unwrap();
     let read: serde_json::Result<Playlist> = Playlist::from_file("tests/data/playlist.edabo");
     let actual = read.unwrap();
     assert_eq!(expected, actual)

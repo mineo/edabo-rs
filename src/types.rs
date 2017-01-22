@@ -223,6 +223,17 @@ impl Deserialize for Playlist {
     }
 }
 
+impl PartialEq for Playlist {
+    fn eq(self: &Playlist, other: &Playlist) -> bool {
+        self.name == other.name &&
+            self.description == other.description &&
+            self.tracklist == other.tracklist &&
+            self.uuid == other.uuid
+    }
+}
+
+impl Eq for Playlist {
+}
 /// A trait for the subcommands used by the CLI entry point.
 pub trait Command {
     /// The name to use for this command on the command line.
