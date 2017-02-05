@@ -21,10 +21,7 @@ impl Track {
     pub fn from_song(song: &Song) -> Result<Track, EdaboError> {
         let ref tags = song.tags;
         let recording_id = if let Some(value) = tags.get("MUSICBRAINZ_TRACKID") {
-            match Uuid::parse_str(value) {
-                Err(err) => Err(From::from(err)),
-                Ok(value) => Ok(value),
-            }
+            Uuid::parse_str(value).map_err(From::from)
         } else {
             Err(EdaboError{
                 kind: ErrorKind::MissingTagError(String::from("recordingid")),
@@ -34,10 +31,7 @@ impl Track {
 
         // TODO: For now, just ignore parse failures
         let release_id = if let Some(value) = tags.get("MUSICBRAINZ_ALBUMID") {
-            match Uuid::parse_str(value) {
-                Err(err) => Err(From::from(err)),
-                Ok(value) => Ok(value),
-            }
+            Uuid::parse_str(value).map_err(From::from)
         } else {
             Err(EdaboError{
                 kind: ErrorKind::MissingTagError(String::from("albumid")),
@@ -46,10 +40,7 @@ impl Track {
         };
 
         let release_track_id = if let Some(value) = tags.get("MUSICBRAINZ_RELEASETRACKID") {
-            match Uuid::parse_str(value) {
-                Err(err) => Err(From::from(err)),
-                Ok(value) => Ok(value),
-            }
+            Uuid::parse_str(value).map_err(From::from)
         } else {
             Err(EdaboError{
                 kind: ErrorKind::MissingTagError(String::from("releasetrackid")),
