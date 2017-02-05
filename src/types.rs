@@ -4,7 +4,6 @@ use mpd::error::Error as MPDError;
 use mpd::Song;
 use serde::de::{Error as SerdeDeError, MapVisitor, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::error::Result as SerdeResult;
 use serde_json;
 use std::convert::From;
 use std::error::Error;
@@ -76,17 +75,11 @@ impl Playlist {
     pub fn from_file<P>(path: P) -> Result<Playlist, EdaboError>
         where P: AsRef<Path>,
     {
-        match File::open(path) {
-            Ok(file) => {
-                let des: SerdeResult<Playlist> = serde_json::from_reader(file);
-                match des {
-                    Ok(pl) => Ok(pl),
-                    Err(e) => Err(From::from(e))
-                }
-            }
-            ,
-            Err(e) => Err(From::from(e))
-        }
+        File::open(path).
+            map_err(From::from).
+            and_then(|file|
+                     serde_json::from_reader(file).map_err(From::from)
+            )
     }
 
     pub fn from_name(name: &str) -> Result<Playlist, EdaboError>
