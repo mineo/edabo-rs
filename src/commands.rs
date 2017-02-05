@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use types::*;
 use xdg::BaseDirectories;
 
-fn get_playlist_dir() -> PathBuf {
+pub fn get_playlist_dir() -> PathBuf {
     let xdg_dirs = BaseDirectories::with_prefix("edabo").unwrap();
     xdg_dirs.find_data_file("playlists").unwrap()
 }

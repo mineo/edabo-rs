@@ -1,5 +1,6 @@
 use clap::{App, ArgMatches};
 use std::fmt;
+use commands::{get_playlist_dir};
 use mpd::error::Error as MPDError;
 use mpd::Song;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
