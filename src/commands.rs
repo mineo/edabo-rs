@@ -8,18 +8,18 @@ use xdg::BaseDirectories;
 
 pub fn get_playlist_dir() -> Result<PathBuf, EdaboError> {
     BaseDirectories::with_prefix("edabo").
-        map_err(|e| From::from(e)).
-        and_then(|dirs| dirs.place_data_file("playlists").map_err(|e| From::from(e)))
+        map_err(From::from).
+        and_then(|dirs| dirs.place_data_file("playlists").map_err(From::from))
 }
 
 fn get_playlist_filenames() -> Result<Vec<PathBuf>, EdaboError> {
     get_playlist_dir().
-        and_then(|dir| dir.read_dir().map_err(|e| From::from(e))).
+        and_then(|dir| dir.read_dir().map_err(From::from)).
         and_then(|files|
                  files.map(|file|
                            file.map(|f|
                                     f.path()).
-                           map_err(|e| From::from(e))
+                           map_err(From::from)
                  ).collect())
 }
 
@@ -58,7 +58,7 @@ impl Command for PrintCommand {
 
     fn run(&self, _: &ArgMatches) -> Result<(), EdaboError> {
         empd::current_playlist().
-            and_then(|playlist| serde_json::to_string_pretty(&playlist).map_err(|e| From::from(e))).
+            and_then(|playlist| serde_json::to_string_pretty(&playlist).map_err(From::from)).
             and_then(|s| Ok(println!("{}", s))
             )
     }

@@ -78,7 +78,7 @@ impl Playlist {
     {
         // let file: File = File::open(path).unwrap();
         // let pl: SerdeResult<Playlist> = serde_json::from_reader(file);
-        // pl.map_err(|e| From::from(e))
+        // pl.map_err(From::from)
 
         match File::open(path) {
             Ok(file) => {
@@ -105,7 +105,7 @@ impl Playlist {
 
     pub fn from_str(s: &str) -> Result<Playlist, EdaboError>
     {
-        serde_json::from_str(s).map_err(|e| From::from(e))
+        serde_json::from_str(s).map_err(From::from)
     }
 
     pub fn to_file(self: &Self) -> Option<EdaboError> {
