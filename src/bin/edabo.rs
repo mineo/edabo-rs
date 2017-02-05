@@ -28,7 +28,10 @@ fn main() {
                                               Box::new(PrintCommand{ })];
     for command in allcommands {
         if let Some(_) = matches.subcommand_matches(command.name()) {
-            command.run(matches);
+            match command.run(matches) {
+                Ok(_) => (),
+                Err(e) => println!("{:?}", e)
+            }
             break
         }
     }

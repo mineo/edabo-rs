@@ -265,7 +265,7 @@ pub trait Command {
     fn build_subcommand<'a, 'b>(&self) -> App<'a, 'b>;
 
     /// Perform the action of this subcommand.
-    fn run(&self, ArgMatches) -> ();
+    fn run(&self, ArgMatches) -> Result<(), EdaboError>;
 }
 
 #[derive(Debug)]

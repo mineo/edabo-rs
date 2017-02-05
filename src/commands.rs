@@ -34,15 +34,14 @@ impl Command for ListCommand {
         "list"
     }
 
-    fn run(&self, _: ArgMatches) -> () {
-        let _ = get_playlist_filenames().
+    fn run(&self, _: ArgMatches) -> Result<(), EdaboError>{
+        get_playlist_filenames().
             and_then(|filenames| {
                 for filename in filenames {
                     println!("{}", filename.display())
                 };
                 Ok(())
-            });
-        ()
+            })
     }
 }
 
@@ -57,11 +56,13 @@ impl Command for PrintCommand {
         "print"
     }
 
-    fn run(&self, _: ArgMatches) -> () {
-        let res = empd::current_playlist().
+    fn run(&self, _: ArgMatches) -> Result<(), EdaboError> {
+        empd::current_playlist().
             and_then(|playlist| serde_json::to_string_pretty(&playlist).map_err(|e| From::from(e))).
             and_then(|s| Ok(println!("{}", s))
-            );
-        println!("{:?}", res)
+            )
+    }
+}
+
     }
 }
