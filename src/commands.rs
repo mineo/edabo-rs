@@ -58,5 +58,3 @@ impl Command for PrintCommand {
         println!("{:?}", res)
     }
 }
-    }
-}
