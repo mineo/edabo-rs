@@ -1,13 +1,15 @@
 use clap::{Arg, ArgMatches, App, SubCommand};
 use empd;
 use serde_json;
+use std::convert::From;
 use std::path::PathBuf;
 use types::*;
 use xdg::BaseDirectories;
 
-pub fn get_playlist_dir() -> PathBuf {
-    let xdg_dirs = BaseDirectories::with_prefix("edabo").unwrap();
-    xdg_dirs.find_data_file("playlists").unwrap()
+pub fn get_playlist_dir() -> Result<PathBuf, EdaboError> {
+    BaseDirectories::with_prefix("edabo").
+        map_err(|e| From::from(e)).
+        and_then(|dirs| dirs.place_data_file("playlists").map_err(|e| From::from(e)))
 }
 
 fn get_playlist_filenames() -> Vec<PathBuf> {

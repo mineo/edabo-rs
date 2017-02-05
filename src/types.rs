@@ -14,6 +14,7 @@ use std::io::Error as IOError;
 use std::path::Path;
 use std::str;
 use uuid::ParseError;
+use xdg::BaseDirectoriesError;
 
 include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
 
@@ -94,10 +95,12 @@ impl Playlist {
 
     pub fn from_name(name: &str) -> Result<Playlist, EdaboError>
     {
-        let mut filepath = get_playlist_dir();
-        filepath.push(name);
-        filepath.set_extension("edabo");
-        Playlist::from_file(filepath)
+        get_playlist_dir().
+            and_then(|mut path| {
+                path.push(name);
+                path.set_extension("edabo");
+                Playlist::from_file(path)
+            })
     }
 
     pub fn from_str(s: &str) -> Result<Playlist, EdaboError>
@@ -273,6 +276,7 @@ pub enum ErrorKind {
     MissingTagError(String),
     MpdError(MPDError),
     UuidError(ParseError),
+    XdgError(BaseDirectoriesError),
 }
 
 #[derive(Debug)]
@@ -321,6 +325,14 @@ impl From<ParseError> for EdaboError {
     fn from(e: ParseError) -> EdaboError {
         EdaboError{
             kind: ErrorKind::UuidError(e),
+            detail: None}
+    }
+}
+
+impl From<BaseDirectoriesError> for EdaboError {
+    fn from(e: BaseDirectoriesError) -> EdaboError {
+        EdaboError{
+            kind: ErrorKind::XdgError(e),
             detail: None}
     }
 }
