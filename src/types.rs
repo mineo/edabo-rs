@@ -268,6 +268,7 @@ pub enum ErrorKind {
     IoError(IOError),
     JsonError(serde_json::Error),
     MissingTagError(String),
+    MpdError(MPDError),
     UuidError(ParseError),
 }
 
@@ -293,6 +294,14 @@ impl From<IOError> for EdaboError {
     fn from(e: IOError) -> EdaboError {
         EdaboError{
             kind: ErrorKind::IoError(e),
+            detail: None}
+    }
+}
+
+impl From<MPDError> for EdaboError {
+    fn from(e: MPDError) -> EdaboError {
+        EdaboError{
+            kind: ErrorKind::MpdError(e),
             detail: None}
     }
 }

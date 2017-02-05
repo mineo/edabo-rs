@@ -8,4 +8,5 @@ extern crate uuid;
 extern crate xdg;
 
 pub mod commands;
+pub mod empd;
 pub mod types;
