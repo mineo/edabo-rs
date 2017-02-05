@@ -51,13 +51,7 @@ impl Command for PrintCommand {
     }
 
     fn run(&self, _: ArgMatches) -> () {
-        let res = empd::connect().
-            and_then(|mut conn| conn.queue().map_err(|e| From::from(e))).
-            and_then(|queue| queue.iter().map(|song| Track::from_song(song)).collect()).
-            and_then(|tracks|
-                     Ok(Playlist::new("Current".to_string(),
-                                      Some("The current playlist".to_string()),
-                                      tracks))).
+        let res = empd::current_playlist().
             and_then(|playlist| serde_json::to_string_pretty(&playlist).map_err(|e| From::from(e))).
             and_then(|s| Ok(println!("{}", s))
             );
