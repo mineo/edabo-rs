@@ -1,4 +1,5 @@
 use clap::{App, ArgMatches};
+use std::fmt;
 use mpd::Song;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{Error as SerdeDeError, MapVisitor, Visitor};
@@ -10,46 +11,56 @@ use std::fs::File;
 use std::io::Error as IOError;
 use std::path::Path;
 use std::str;
+use uuid::ParseError;
 
 include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
 
 impl Track {
-    pub fn from_song(song: &Song) -> Result<Track, String> {
+    pub fn from_song(song: &Song) -> Result<Track, EdaboError> {
         let ref tags = song.tags;
         let recording_id = if let Some(value) = tags.get("MUSICBRAINZ_TRACKID") {
             match Uuid::parse_str(value) {
-                Err(err) => Err(err.description().to_string()),
+                Err(err) => Err(From::from(err)),
                 Ok(value) => Ok(value),
             }
         } else {
-            Err("No recordingid tag".to_string())
+            Err(EdaboError{
+                kind: ErrorKind::MissingTagError(String::from("recordingid")),
+                detail: None
+            })
         };
 
         // TODO: For now, just ignore parse failures
         let release_id = if let Some(value) = tags.get("MUSICBRAINZ_ALBUMID") {
             match Uuid::parse_str(value) {
-                Err(_) => None,
-                Ok(value) => Some(value),
+                Err(err) => Err(From::from(err)),
+                Ok(value) => Ok(value),
             }
         } else {
-            None
+            Err(EdaboError{
+                kind: ErrorKind::MissingTagError(String::from("albumid")),
+                detail: None
+            })
         };
 
         let release_track_id = if let Some(value) = tags.get("MUSICBRAINZ_RELEASETRACKID") {
             match Uuid::parse_str(value) {
-                Err(_) => None,
-                Ok(value) => Some(value),
+                Err(err) => Err(From::from(err)),
+                Ok(value) => Ok(value),
             }
         } else {
-            None
+            Err(EdaboError{
+                kind: ErrorKind::MissingTagError(String::from("releasetrackid")),
+                detail: None
+            })
         };
 
         match recording_id {
             Ok(id) => {
                 Ok(Track {
                     recording_id: id,
-                    release_id: release_id,
-                    release_track_id: release_track_id,
+                    release_id: release_id.ok(),
+                    release_track_id: release_track_id.ok(),
                 })
             }
             // The LHS Err(reason) has a different type than the RHS one.
@@ -59,9 +70,8 @@ impl Track {
 }
 
 impl Playlist {
-    pub fn from_file<P, E>(path: P) -> Result<Playlist, E>
+    pub fn from_file<P>(path: P) -> Result<Playlist, EdaboError>
         where P: AsRef<Path>,
-              E: Error + 'static + From<IOError> + From<serde_json::Error>
     {
         // let file: File = File::open(path).unwrap();
         // let pl: SerdeResult<Playlist> = serde_json::from_reader(file);
@@ -80,8 +90,15 @@ impl Playlist {
         }
     }
 
-    pub fn from_str<E>(s: &str) -> Result<Playlist, E>
-        where E: Error + 'static + From<serde_json::Error>
+    pub fn from_name(name: &str) -> Result<Playlist, EdaboError>
+    {
+        let mut filepath = get_playlist_dir();
+        filepath.push(name);
+        filepath.set_extension("edabo");
+        Playlist::from_file(filepath)
+    }
+
+    pub fn from_str(s: &str) -> Result<Playlist, EdaboError>
     {
         serde_json::from_str(s).map_err(|e| From::from(e))
     }
@@ -244,4 +261,54 @@ pub trait Command {
 
     /// Perform the action of this subcommand.
     fn run(&self, ArgMatches) -> ();
+}
+
+#[derive(Debug)]
+pub enum ErrorKind {
+    IoError(IOError),
+    JsonError(serde_json::Error),
+    MissingTagError(String),
+    UuidError(ParseError),
+}
+
+#[derive(Debug)]
+pub struct EdaboError {
+    pub kind: ErrorKind,
+    pub detail: Option<String>
+}
+
+impl Error for EdaboError {
+    fn description(&self) -> &str {
+        "Something went wrong. In the future, I'll even tell you what!"
+    }
+}
+
+impl fmt::Display for EdaboError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.description())
+    }
+}
+
+impl From<IOError> for EdaboError {
+    fn from(e: IOError) -> EdaboError {
+        EdaboError{
+            kind: ErrorKind::IoError(e),
+            detail: None}
+    }
+}
+
+impl From<serde_json::Error> for EdaboError {
+    fn from(e: serde_json::Error) -> EdaboError {
+        EdaboError{
+            kind: ErrorKind::JsonError(e),
+            detail: None}
+    }
+}
+
+impl From<ParseError> for EdaboError {
+    fn from(e: ParseError) -> EdaboError {
+        EdaboError{
+            kind: ErrorKind::UuidError(e),
+            detail: None}
+    }
 }

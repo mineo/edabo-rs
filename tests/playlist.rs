@@ -29,7 +29,7 @@ fn playlist_roundtrip() {
 fn playlist_from_file() {
     let mut expected = get_playlist();
     expected.uuid = uuid::Uuid::parse_str("69149c42-dd5d-46c2-83bc-0fc801d35dbc").unwrap();
-    let read: serde_json::Result<Playlist> = Playlist::from_file("tests/data/playlist.edabo");
+    let read = Playlist::from_file("tests/data/playlist.edabo");
     let actual = read.unwrap();
     assert_eq!(expected, actual)
 }
@@ -38,7 +38,7 @@ fn playlist_from_file() {
 fn playlist_from_str() {
     let before = get_playlist();
     let serialized = serde_json::to_string(&before).unwrap();
-    let after: serde_json::Result<Playlist> = Playlist::from_str(serialized.as_str());
+    let after = Playlist::from_str(serialized.as_str());
     let actual = after.unwrap();
     assert_eq!(before, actual)
 }
