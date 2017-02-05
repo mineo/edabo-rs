@@ -267,6 +267,7 @@ pub trait Command {
 
 #[derive(Debug)]
 pub enum ErrorKind {
+    ArgumentError,
     IoError(IOError),
     JsonError(serde_json::Error),
     MissingTagError(String),
