@@ -20,45 +20,60 @@ include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
 impl Track {
     pub fn from_song(song: &Song) -> Result<Track, EdaboError> {
         let ref tags = song.tags;
-        let recording_id = if let Some(value) = tags.get("MUSICBRAINZ_TRACKID") {
-            Uuid::parse_str(value).map_err(From::from)
-        } else {
-            Err(EdaboError{
-                kind: ErrorKind::MissingTagError(String::from("recordingid")),
-                detail: None
-            })
+        let recording_id = tags.get("MUSICBRAINZ_TRACKID").
+            ok_or_else(||
+                       EdaboError{
+                           kind: ErrorKind::MissingTagError(song.file.clone(), String::from("recordingid")),
+                           detail: None
+                       }).
+            and_then(|value| Uuid::parse_str(value).
+                     map_err(|e| EdaboError{
+                         kind: ErrorKind::UuidError(song.file.clone(), e),
+                         detail: None
+                     }));
+
+        // The release id and release track id are optional, but if the tags
+        // exist, they should contain uuids
+        let release_id: Result<Option<Uuid>, EdaboError> = match tags.get("MUSICBRAINZ_ALBUMID") {
+            None => Ok(None),
+            Some(value) =>
+                Uuid::parse_str(value).
+                map_err(|e|
+                        EdaboError{
+                            kind: ErrorKind::UuidError(song.file.clone(), e),
+                            detail: None
+                        }
+                ).and_then(|v| Ok(Some(v)))
         };
 
-        // TODO: For now, just ignore parse failures
-        let release_id = if let Some(value) = tags.get("MUSICBRAINZ_ALBUMID") {
-            Uuid::parse_str(value).map_err(From::from)
-        } else {
-            Err(EdaboError{
-                kind: ErrorKind::MissingTagError(String::from("albumid")),
-                detail: None
-            })
+        let release_track_id = match tags.get("MUSICBRAINZ_RELEASETRACKID") {
+            None => Ok(None),
+            Some(value) =>
+                Uuid::parse_str(value).
+                map_err(|e|
+                        EdaboError{
+                            kind: ErrorKind::UuidError(song.file.clone(), e),
+                            detail: None
+                        }
+                ).and_then(|v| Ok(Some(v)))
         };
 
-        let release_track_id = if let Some(value) = tags.get("MUSICBRAINZ_RELEASETRACKID") {
-            Uuid::parse_str(value).map_err(From::from)
-        } else {
-            Err(EdaboError{
-                kind: ErrorKind::MissingTagError(String::from("releasetrackid")),
-                detail: None
-            })
-        };
-
-        match recording_id {
-            Ok(id) => {
-                Ok(Track {
-                    recording_id: id,
-                    release_id: release_id.ok(),
-                    release_track_id: release_track_id.ok(),
-                })
-            }
-            // The LHS Err(reason) has a different type than the RHS one.
-            Err(reason) => Err(reason),
-        }
+        recording_id.
+            and_then(|id|
+                     release_id.
+                     and_then(|relid|
+                              release_track_id.
+                              and_then(|rtid|
+                                       Ok(
+                                           Track{
+                                               recording_id: id,
+                                               release_id: relid,
+                                               release_track_id: rtid,
+                                           }
+                                       )
+                              )
+                     )
+            )
     }
 }
 
@@ -265,10 +280,10 @@ pub enum ErrorKind {
     ArgumentError,
     IoError(IOError),
     JsonError(serde_json::Error),
-    MissingTagError(String),
+    MissingTagError(String, String),
     MpdError(MPDError),
     NoCurrentSong,
-    UuidError(ParseError),
+    UuidError(String, ParseError),
     XdgError(BaseDirectoriesError),
 }
 
@@ -310,14 +325,6 @@ impl From<serde_json::Error> for EdaboError {
     fn from(e: serde_json::Error) -> EdaboError {
         EdaboError{
             kind: ErrorKind::JsonError(e),
-            detail: None}
-    }
-}
-
-impl From<ParseError> for EdaboError {
-    fn from(e: ParseError) -> EdaboError {
-        EdaboError{
-            kind: ErrorKind::UuidError(e),
             detail: None}
     }
 }
