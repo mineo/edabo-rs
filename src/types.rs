@@ -1,4 +1,4 @@
-use clap::App;
+use clap::{App, ArgMatches};
 use mpd::Song;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{Error as SerdeDeError, MapVisitor, Visitor};
@@ -243,5 +243,5 @@ pub trait Command {
     fn build_subcommand<'a, 'b>(&self) -> App<'a, 'b>;
 
     /// Perform the action of this subcommand.
-    fn run(&self) -> ();
+    fn run(&self, ArgMatches) -> ();
 }

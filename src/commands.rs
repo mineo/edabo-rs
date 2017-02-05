@@ -1,4 +1,4 @@
-use clap::{App, SubCommand};
+use clap::{Arg, ArgMatches, App, SubCommand};
 use mpd::Client;
 use serde_json;
 use std::path::PathBuf;
@@ -32,7 +32,7 @@ impl Command for ListCommand {
         "list"
     }
 
-    fn run(&self) -> () {
+    fn run(&self, _: ArgMatches) -> () {
         for file in get_playlist_filenames() {
             println!("{}", file.display());
         }
@@ -50,7 +50,7 @@ impl Command for PrintCommand {
         "print"
     }
 
-    fn run(&self) -> () {
+    fn run(&self, _: ArgMatches) -> () {
         let mut conn = Client::connect("127.0.0.1:6600").unwrap();
         let playqueue = conn.queue().unwrap();
         let mut tracks = Vec::new();
