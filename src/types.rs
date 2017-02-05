@@ -1,14 +1,14 @@
 use clap::{App, ArgMatches};
-use std::fmt;
 use commands::{get_playlist_dir};
 use mpd::error::Error as MPDError;
 use mpd::Song;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{Error as SerdeDeError, MapVisitor, Visitor};
-use serde_json;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::error::Result as SerdeResult;
+use serde_json;
 use std::convert::From;
 use std::error::Error;
+use std::fmt;
 use std::fs::File;
 use std::io::Error as IOError;
 use std::path::Path;
