@@ -76,10 +76,6 @@ impl Playlist {
     pub fn from_file<P>(path: P) -> Result<Playlist, EdaboError>
         where P: AsRef<Path>,
     {
-        // let file: File = File::open(path).unwrap();
-        // let pl: SerdeResult<Playlist> = serde_json::from_reader(file);
-        // pl.map_err(From::from)
-
         match File::open(path) {
             Ok(file) => {
                 let des: SerdeResult<Playlist> = serde_json::from_reader(file);
