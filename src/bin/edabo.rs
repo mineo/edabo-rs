@@ -11,7 +11,8 @@ fn make_clap_parser<'a, 'b>() -> App<'a, 'b> {
     // TODO move this into something global so we don't construct it here and
     // when evaluating the arguments
     let allcommands: Vec<Box<Command>> = vec![Box::new(ListCommand{ }) ,
-                                              Box::new(PrintCommand{ })];
+                                              Box::new(PrintCommand{ }),
+                                              Box::new(AddCommand { })];
     let mut app = App::new("Edabo")
         .version("1.0")
         .author("Wieland Hoffmann");
@@ -25,7 +26,8 @@ fn make_clap_parser<'a, 'b>() -> App<'a, 'b> {
 fn main() {
     let matches = make_clap_parser().get_matches();
     let allcommands: Vec<Box<Command>> = vec![Box::new(ListCommand{ }) ,
-                                              Box::new(PrintCommand{ })];
+                                              Box::new(PrintCommand{ }),
+                                              Box::new(AddCommand{ })];
     for command in allcommands {
         if let Some(args) = matches.subcommand_matches(command.name()) {
             match command.run(args) {

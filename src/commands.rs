@@ -63,3 +63,56 @@ impl Command for PrintCommand {
             )
     }
 }
+
+pub struct AddCommand;
+
+impl Command for AddCommand {
+    fn build_subcommand<'a, 'b>(&self) -> App<'a, 'b> {
+        SubCommand::with_name(self.name()).
+            about("Add something to a playlist").
+            arg(Arg::with_name("playlist").
+                help("The name of the playlist").
+                required(true)).
+            arg(Arg::with_name("all").
+                long("all").
+                short("a").
+                help("Add all tracks from the current playlist")
+            )
+    }
+
+    fn name(&self) -> &str{
+        "add"
+    }
+
+    fn run(&self, args: &ArgMatches) -> Result<(), EdaboError> {
+        args.value_of("playlist").
+            ok_or_else(|| EdaboError {
+                kind: ErrorKind::ArgumentError,
+                detail: Some(String::from("Playlist argument not given, although it is required"))
+            }).
+            and_then(|name| Playlist::from_name(name)).
+            and_then(|mut playlist_to_modify|
+                     match args.is_present("all") {
+                         true => empd::current_playlist().
+                             and_then(|pl| {
+                                 for (uuid, track) in pl.tracklist {
+                                     playlist_to_modify.tracklist.insert(uuid, track);
+                                 }
+                                 match playlist_to_modify.to_file() {
+                                     Some(e) => Err(e),
+                                     None => Ok(())
+                                 }
+                             }
+                             ),
+                         false => empd::current_track().
+                             and_then(|track| {
+                                 playlist_to_modify.tracklist.insert(track.recording_id, track);
+                                 match playlist_to_modify.to_file() {
+                                     Some(e) => Err(e),
+                                     None => Ok(())
+                                 }
+                             })
+                     }
+            )
+    }
+}
