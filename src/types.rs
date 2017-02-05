@@ -275,6 +275,7 @@ pub enum ErrorKind {
     JsonError(serde_json::Error),
     MissingTagError(String),
     MpdError(MPDError),
+    NoCurrentSong,
     UuidError(ParseError),
     XdgError(BaseDirectoriesError),
 }

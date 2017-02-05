@@ -15,3 +15,12 @@ pub fn current_playlist() -> Result<Playlist, EdaboError> {
                                   Some("The current playlist".to_string()),
                                   tracks)))
 }
+
+pub fn current_track() -> Result<Track, EdaboError> {
+    connect().
+        and_then(|mut conn| conn.currentsong().map_err(From::from)).
+        and_then(|optsong| optsong.
+                 ok_or_else(|| EdaboError{ kind: ErrorKind::NoCurrentSong,
+                                           detail: None}).
+                 and_then(|s| Track::from_song(&s)))
+}
