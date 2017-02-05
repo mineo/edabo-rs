@@ -1,5 +1,5 @@
 use clap::{Arg, ArgMatches, App, SubCommand};
-use mpd::Client;
+use empd;
 use serde_json;
 use std::path::PathBuf;
 use types::*;
@@ -51,18 +51,18 @@ impl Command for PrintCommand {
     }
 
     fn run(&self, _: ArgMatches) -> () {
-        let mut conn = Client::connect("127.0.0.1:6600").unwrap();
-        let playqueue = conn.queue().unwrap();
-        let mut tracks = Vec::new();
-        for song in &playqueue {
-            let track = Track::from_song(song);
-            if let Ok(val) = track {
-                tracks.push(val);
-            }
-        }
-        let playlist = Playlist::new("Current".to_string(),
-                                     Some("The current playlist".to_string()),
-                                     tracks);
-        println!("{}", serde_json::to_string_pretty(&playlist).unwrap());
+        let res = empd::connect().
+            and_then(|mut conn| conn.queue().map_err(|e| From::from(e))).
+            and_then(|queue| queue.iter().map(|song| Track::from_song(song)).collect()).
+            and_then(|tracks|
+                     Ok(Playlist::new("Current".to_string(),
+                                      Some("The current playlist".to_string()),
+                                      tracks))).
+            and_then(|playlist| serde_json::to_string_pretty(&playlist).map_err(|e| From::from(e))).
+            and_then(|s| Ok(println!("{}", s))
+            );
+        println!("{:?}", res)
+    }
+}
     }
 }
