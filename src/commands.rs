@@ -12,15 +12,15 @@ pub fn get_playlist_dir() -> Result<PathBuf, EdaboError> {
         and_then(|dirs| dirs.place_data_file("playlists").map_err(|e| From::from(e)))
 }
 
-fn get_playlist_filenames() -> Vec<PathBuf> {
-    let playlist_dir = get_playlist_dir();
-    let entries = playlist_dir.read_dir().unwrap();
-    // TODO: the size of filenames should be the same as the size of entries
-    let mut filenames: Vec<PathBuf> = vec![];
-    for entry in entries {
-        filenames.push(entry.unwrap().path())
-    }
-    filenames
+fn get_playlist_filenames() -> Result<Vec<PathBuf>, EdaboError> {
+    get_playlist_dir().
+        and_then(|dir| dir.read_dir().map_err(|e| From::from(e))).
+        and_then(|files|
+                 files.map(|file|
+                           file.map(|f|
+                                    f.path()).
+                           map_err(|e| From::from(e))
+                 ).collect())
 }
 
 pub struct ListCommand;
@@ -35,9 +35,14 @@ impl Command for ListCommand {
     }
 
     fn run(&self, _: ArgMatches) -> () {
-        for file in get_playlist_filenames() {
-            println!("{}", file.display());
-        }
+        let _ = get_playlist_filenames().
+            and_then(|filenames| {
+                for filename in filenames {
+                    println!("{}", filename.display())
+                };
+                Ok(())
+            });
+        ()
     }
 }
 
