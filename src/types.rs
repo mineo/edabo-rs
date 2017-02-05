@@ -108,6 +108,18 @@ impl Playlist {
         serde_json::from_str(s).map_err(|e| From::from(e))
     }
 
+    pub fn to_file(self: &Self) -> Option<EdaboError> {
+        get_playlist_dir().
+            and_then(|mut path| {
+                path.push(&self.name);
+                path.set_extension("edabo");
+                File::create(path).map_err(From::from)
+            }).
+            and_then(|mut file|
+                     serde_json::to_writer_pretty(&mut file, self).map_err(From::from)
+            ).err()
+    }
+
     pub fn new(name: String, description: Option<String>, mut tracklist: Vec<Track>) -> Playlist {
         let uuid = Uuid::new_v4();
         let timestamp = UTC::now();
