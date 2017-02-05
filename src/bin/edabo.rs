@@ -27,8 +27,8 @@ fn main() {
     let allcommands: Vec<Box<Command>> = vec![Box::new(ListCommand{ }) ,
                                               Box::new(PrintCommand{ })];
     for command in allcommands {
-        if let Some(_) = matches.subcommand_matches(command.name()) {
-            match command.run(matches) {
+        if let Some(args) = matches.subcommand_matches(command.name()) {
+            match command.run(args) {
                 Ok(_) => (),
                 Err(e) => println!("{:?}", e)
             }
