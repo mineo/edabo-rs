@@ -58,6 +58,8 @@ impl Track {
                 ).and_then(|v| Ok(Some(v)))
         };
 
+        // TODO: Use collect over Vec<Result<Uuid, EdaboError>> or something
+        // similar here
         recording_id.
             and_then(|id|
                      release_id.
