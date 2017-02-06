@@ -2,7 +2,6 @@ use clap::{Arg, ArgMatches, App, SubCommand};
 use empd;
 use mpd::search::*;
 use serde_json;
-use std::borrow::Cow;
 use std::convert::From;
 use std::path::PathBuf;
 use std::str;
@@ -160,7 +159,7 @@ impl Command for LoadCommand {
                          }
 
                          playlist.tracklist.keys().map(|recid| {
-                             let tag = Term::Tag(Cow::from("MUSICBRAINZ_TRACKID"));
+                             let tag = Term::Tag("MUSICBRAINZ_TRACKID".into());
                              let id = recid.hyphenated().to_string();
                              let mut query = Query::new();
                              let q2 = query.and(tag, id);
