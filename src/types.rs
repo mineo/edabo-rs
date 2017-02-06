@@ -12,7 +12,7 @@ use std::fs::File;
 use std::io::Error as IOError;
 use std::path::Path;
 use std::str;
-use uuid::ParseError;
+use uuid::{ParseError, Uuid};
 use xdg::BaseDirectoriesError;
 
 include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
@@ -282,6 +282,7 @@ pub enum ErrorKind {
     ArgumentError,
     IoError(IOError),
     JsonError(serde_json::Error),
+    MissingSongError(Uuid),
     MissingTagError(String, String),
     MpdError(MPDError),
     NoCurrentSong,

@@ -1,8 +1,11 @@
 use clap::{Arg, ArgMatches, App, SubCommand};
 use empd;
+use mpd::search::*;
 use serde_json;
+use std::borrow::Cow;
 use std::convert::From;
 use std::path::PathBuf;
+use std::str;
 use types::*;
 use xdg::BaseDirectories;
 
@@ -114,5 +117,74 @@ impl Command for AddCommand {
                              })
                      }
             )
+    }
+}
+
+pub struct LoadCommand;
+
+impl Command for LoadCommand {
+    fn build_subcommand<'a, 'b>(&self) -> App<'a, 'b> {
+        SubCommand::with_name(self.name()).
+            about("Load a playlist").
+            arg(Arg::with_name("playlist").
+                help("The name of the playlist").
+                required(true)).
+            arg(Arg::with_name("clear").
+                long("clear").
+                short("c").
+                help("Clear the current playlist before loading")
+            )
+    }
+
+    fn name(&self) -> &str{
+        "load"
+    }
+
+    fn run(&self, args: &ArgMatches) -> Result<(), EdaboError> {
+        let playlist = args.value_of("playlist").
+            ok_or_else(|| EdaboError {
+                kind: ErrorKind::ArgumentError,
+                detail: Some(String::from("Playlist argument not given, although it is required"))
+            }).
+            and_then(|name| Playlist::from_name(name));
+
+        let res: Result<Vec<()>, EdaboError> = playlist.
+            and_then(|playlist|
+                     empd::connect().
+                     and_then(|mut client| {
+
+                         if args.is_present("clear") {
+                             if let Err(e) = client.clear() {
+                                 return Err(From::from(e))
+                             }
+                         }
+
+                         playlist.tracklist.keys().map(|recid| {
+                             let tag = Term::Tag(Cow::from("MUSICBRAINZ_TRACKID"));
+                             let id = recid.hyphenated().to_string();
+                             let mut query = Query::new();
+                             let q2 = query.and(tag, id);
+                             client.search(q2, (0, 1)).
+                                 map_err(From::from).
+                                 and_then(|songs|
+                                          if songs.len() == 0 {
+                                              Err( EdaboError {
+                                                  kind: ErrorKind::MissingSongError(recid.clone()),
+                                                  detail: None
+                                              })
+                                          } else {
+                                              client.push(songs.first().
+                                                          expect("We just asserted there's an element here")).
+                                                  map_err(From::from).
+                                                  map(|_| ())
+                                          }
+                                 )
+                         }).collect()
+                     })
+            );
+        // TODO The error handling here isn't really good. There should be a
+        // Vec<Option<EdaboError>> here that can be moved into an
+        // ErrorKind::MultipleErrors(EdaboError) or something like that.
+        res.map(|_| ())
     }
 }

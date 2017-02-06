@@ -1,7 +1,6 @@
 use chrono::{DateTime, UTC};
 use linked_hash_map::LinkedHashMap;
 use std::option::Option;
-use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct Track {
