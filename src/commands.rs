@@ -100,20 +100,20 @@ impl Command for AddCommand {
                                  for (uuid, track) in pl.tracklist {
                                      playlist_to_modify.tracklist.insert(uuid, track);
                                  }
-                                 match playlist_to_modify.to_file() {
-                                     Some(e) => Err(e),
-                                     None => Ok(())
-                                 }
+                                 Ok(playlist_to_modify)
                              }
                              ),
                          false => empd::current_track().
                              and_then(|track| {
                                  playlist_to_modify.tracklist.insert(track.recording_id, track);
-                                 match playlist_to_modify.to_file() {
-                                     Some(e) => Err(e),
-                                     None => Ok(())
-                                 }
+                                 Ok(playlist_to_modify)
                              })
+                     }
+            ).
+            and_then(|playlist|
+                     match playlist.to_file() {
+                         Some(e) => Err(e),
+                         None => Ok(())
                      }
             )
     }
