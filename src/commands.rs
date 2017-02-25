@@ -92,7 +92,7 @@ impl Command for AddCommand {
                 kind: ErrorKind::ArgumentError,
                 detail: Some(String::from("Playlist argument not given, although it is required"))
             }).
-            and_then(|name| Playlist::from_name(name)).
+            and_then(Playlist::from_name).
             and_then(|mut playlist_to_modify|
                      match args.is_present("all") {
                          true => empd::current_playlist().
@@ -145,7 +145,7 @@ impl Command for LoadCommand {
                 kind: ErrorKind::ArgumentError,
                 detail: Some(String::from("Playlist argument not given, although it is required"))
             }).
-            and_then(|name| Playlist::from_name(name));
+            and_then(Playlist::from_name);
 
         let res: Result<Vec<()>, EdaboError> = playlist.
             and_then(|playlist|
