@@ -2,11 +2,11 @@ use mpd::Client;
 use std::convert::From;
 use types::*;
 
-pub fn connect() -> Result<Client, EdaboError> {
+pub fn connect() -> Result<Client> {
     Client::connect("127.0.0.1:6600").map_err(From::from)
 }
 
-pub fn current_playlist() -> Result<Playlist, EdaboError> {
+pub fn current_playlist() -> Result<Playlist> {
     connect().
         and_then(|mut conn| conn.queue().map_err(From::from)).
         and_then(|queue| queue.iter().map(|song| Track::from_song(song)).collect()).
@@ -16,7 +16,7 @@ pub fn current_playlist() -> Result<Playlist, EdaboError> {
                                   tracks)))
 }
 
-pub fn current_track() -> Result<Track, EdaboError> {
+pub fn current_track() -> Result<Track> {
     connect().
         and_then(|mut conn| conn.currentsong().map_err(From::from)).
         and_then(|optsong| optsong.

@@ -11,6 +11,7 @@ use std::fmt;
 use std::fs::File;
 use std::io::Error as IOError;
 use std::path::Path;
+use std::result;
 use std::str;
 use uuid::{ParseError, Uuid};
 use xdg::BaseDirectoriesError;
@@ -18,7 +19,7 @@ use xdg::BaseDirectoriesError;
 include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
 
 impl Track {
-    pub fn from_song(song: &Song) -> Result<Track, EdaboError> {
+    pub fn from_song(song: &Song) -> result::Result<Track, EdaboError> {
         let ref tags = song.tags;
         let recording_id = tags.get("MUSICBRAINZ_TRACKID").
             ok_or_else(||
@@ -34,7 +35,7 @@ impl Track {
 
         // The release id and release track id are optional, but if the tags
         // exist, they should contain uuids
-        let release_id: Result<Option<Uuid>, EdaboError> = match tags.get("MUSICBRAINZ_ALBUMID") {
+        let release_id: Result<Option<Uuid>> = match tags.get("MUSICBRAINZ_ALBUMID") {
             None => Ok(None),
             Some(value) =>
                 Uuid::parse_str(value).
@@ -80,7 +81,7 @@ impl Track {
 }
 
 impl Playlist {
-    pub fn from_file<P>(path: P) -> Result<Playlist, EdaboError>
+    pub fn from_file<P>(path: P) -> result::Result<Playlist, EdaboError>
         where P: AsRef<Path>,
     {
         File::open(path).
@@ -90,7 +91,7 @@ impl Playlist {
             )
     }
 
-    pub fn from_name(name: &str) -> Result<Playlist, EdaboError>
+    pub fn from_name(name: &str) -> result::Result<Playlist, EdaboError>
     {
         get_playlist_dir().
             and_then(|mut path| {
@@ -100,7 +101,7 @@ impl Playlist {
             })
     }
 
-    pub fn from_str(s: &str) -> Result<Playlist, EdaboError>
+    pub fn from_str(s: &str) -> result::Result<Playlist, EdaboError>
     {
         serde_json::from_str(s).map_err(From::from)
     }
@@ -135,7 +136,7 @@ impl Playlist {
 }
 
 impl Serialize for Playlist {
-    fn serialize<S>(self: &Self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(self: &Self, serializer: &mut S) -> result::Result<(), S::Error>
         where S: Serializer {
         let tracks: Vec<&Track> = self.tracklist.values().collect();
         let mut state = serializer.serialize_struct("Playlist", 5).unwrap();
@@ -149,19 +150,19 @@ impl Serialize for Playlist {
 }
 
 impl Deserialize for Playlist {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: &mut D) -> result::Result<Self, D::Error>
         where D: Deserializer {
         #[allow(non_camel_case_types)]
         enum Field { name, description, timestamp, uuid, tracklist}
 
         impl Deserialize for Field {
-            fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+            fn deserialize<D>(deserializer: &mut D) -> result::Result<Self, D::Error>
                 where D: Deserializer {
                 struct FieldVisitor;
 
                 impl Visitor for FieldVisitor {
                     type Value = Field;
-                    fn visit_str<E>(&mut self, value: &str) -> Result<Self::Value, E>
+                    fn visit_str<E>(&mut self, value: &str) -> result::Result<Self::Value, E>
                         where E: SerdeDeError {
                         match value {
                             "name" => Ok(Field::name),
@@ -173,7 +174,7 @@ impl Deserialize for Playlist {
                         }
                     }
 
-                    fn visit_bytes<E>(&mut self, value: &[u8]) -> Result<Self::Value, E>
+                    fn visit_bytes<E>(&mut self, value: &[u8]) -> result::Result<Self::Value, E>
                         where E: SerdeDeError {
                         match value {
                             b"description" => Ok(Field::description),
@@ -195,7 +196,7 @@ impl Deserialize for Playlist {
         impl Visitor for ValuesVisitor {
             type Value = Playlist;
 
-            fn visit_map<V>(&mut self, mut visitor: V) -> Result<Self::Value, V::Error>
+            fn visit_map<V>(&mut self, mut visitor: V) -> result::Result<Self::Value, V::Error>
                 where V: MapVisitor {
                 let mut name: Option<String> = None;
                 let mut description: Option<Option<String>> = None;
@@ -274,7 +275,7 @@ pub trait Command {
     fn build_subcommand<'a, 'b>(&self) -> App<'a, 'b>;
 
     /// Perform the action of this subcommand.
-    fn run(&self, &ArgMatches) -> Result<(), EdaboError>;
+    fn run(&self, &ArgMatches) -> result::Result<(), EdaboError>;
 }
 
 #[derive(Debug)]
@@ -339,3 +340,5 @@ impl From<BaseDirectoriesError> for EdaboError {
             detail: None}
     }
 }
+
+pub type Result<T> = result::Result<T, EdaboError>;

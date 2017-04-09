@@ -8,13 +8,13 @@ use std::str;
 use types::*;
 use xdg::BaseDirectories;
 
-pub fn get_playlist_dir() -> Result<PathBuf, EdaboError> {
+pub fn get_playlist_dir() -> Result<PathBuf> {
     BaseDirectories::with_prefix("edabo").
         map_err(From::from).
         and_then(|dirs| dirs.place_data_file("playlists").map_err(From::from))
 }
 
-fn get_playlist_filenames() -> Result<Vec<PathBuf>, EdaboError> {
+fn get_playlist_filenames() -> Result<Vec<PathBuf>> {
     get_playlist_dir().
         and_then(|dir| dir.read_dir().map_err(From::from)).
         and_then(|files|
@@ -36,7 +36,7 @@ impl Command for ListCommand {
         "list"
     }
 
-    fn run(&self, _: &ArgMatches) -> Result<(), EdaboError>{
+    fn run(&self, _: &ArgMatches) -> Result<()> {
         get_playlist_filenames().
             and_then(|filenames| {
                 for filename in filenames {
@@ -58,7 +58,7 @@ impl Command for PrintCommand {
         "print"
     }
 
-    fn run(&self, _: &ArgMatches) -> Result<(), EdaboError> {
+    fn run(&self, _: &ArgMatches) -> Result<()> {
         empd::current_playlist().
             and_then(|playlist| serde_json::to_string_pretty(&playlist).map_err(From::from)).
             and_then(|s| Ok(println!("{}", s))
@@ -86,7 +86,7 @@ impl Command for AddCommand {
         "add"
     }
 
-    fn run(&self, args: &ArgMatches) -> Result<(), EdaboError> {
+    fn run(&self, args: &ArgMatches) -> Result<()> {
         args.value_of("playlist").
             ok_or_else(|| EdaboError {
                 kind: ErrorKind::ArgumentError,
@@ -139,7 +139,7 @@ impl Command for LoadCommand {
         "load"
     }
 
-    fn run(&self, args: &ArgMatches) -> Result<(), EdaboError> {
+    fn run(&self, args: &ArgMatches) -> Result<()> {
         let playlist = args.value_of("playlist").
             ok_or_else(|| EdaboError {
                 kind: ErrorKind::ArgumentError,
@@ -147,7 +147,7 @@ impl Command for LoadCommand {
             }).
             and_then(Playlist::from_name);
 
-        let res: Result<Vec<()>, EdaboError> = playlist.
+        let res: Result<Vec<()>> = playlist.
             and_then(|playlist|
                      empd::connect().
                      and_then(|mut client| {
