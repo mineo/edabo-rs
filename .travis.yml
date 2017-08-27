@@ -11,6 +11,6 @@ matrix:
   allow_failures:
     - rust: nightly
 before_install:
-  - cargo install rustfmt
+  - if [ "${JOB:?}" = "rustfmt" ]; then cargo install rustfmt fi
 script:
   - ./travis/travis.sh
