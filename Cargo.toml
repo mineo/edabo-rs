@@ -4,15 +4,15 @@ version = "0.1.0"
 authors = ["Wieland Hoffmann <themineo@gmail.com>"]
 
 [dependencies]
-clap = "2.19"
-chrono = { version = "0.4", features = ["serde"] }
-linked-hash-map = { version = "0.5.0", features = ["serde_impl"] }
+clap = "~2"
+chrono = { version = "~0.4", features = ["serde"] }
+linked-hash-map = { version = "~0.5.0", features = ["serde_impl"] }
 mpd = { git = "https://github.com/kstep/rust-mpd.git" }
-serde = "1.0"
-serde_derive = "1.0"
-serde_json = "1.0"
-uuid = { version = "0.5", features = ["serde", "v4"] }
-xdg = "2.0.0"
+serde = "~1"
+serde_derive = "~1"
+serde_json = "~1"
+uuid = { version = "~0.5", features = ["serde", "v4"] }
+xdg = "~2"
 
 [[bin]]
 name = "edabo"
