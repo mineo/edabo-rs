@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use clap::{App, ArgMatches};
-use commands::{get_playlist_dir};
+use commands::get_playlist_dir;
 use mpd::Song;
 use mpd::error::Error as MPDError;
 use serde_json;
@@ -19,121 +19,123 @@ use xdg::BaseDirectoriesError;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Track {
-    #[serde(rename="recordingid")]
+    #[serde(rename = "recordingid")]
     pub recording_id: Uuid,
-    #[serde(rename="releaseid")]
+    #[serde(rename = "releaseid")]
     pub release_id: Option<Uuid>,
-    #[serde(rename="releasetrackid")]
+    #[serde(rename = "releasetrackid")]
     pub release_track_id: Option<Uuid>,
 }
 
-#[derive(Serialize, Deserialize ,Debug, Eq)]
+#[derive(Serialize, Deserialize, Debug, Eq)]
 pub struct Playlist {
     pub name: String,
     pub description: Option<String>,
     pub tracklist: HashSet<Track>,
     pub timestamp: DateTime<Utc>,
     pub uuid: Uuid,
-
 }
 impl Track {
     pub fn from_song(song: &Song) -> result::Result<Track, EdaboError> {
         let ref tags = song.tags;
-        let recording_id = tags.get("MUSICBRAINZ_TRACKID").
-            ok_or_else(||
-                       EdaboError{
-                           kind: ErrorKind::MissingTagError(song.file.clone(), String::from("recordingid")),
-                           detail: None
-                       }).
-            and_then(|value| Uuid::parse_str(value).
-                     map_err(|e| EdaboError{
-                         kind: ErrorKind::UuidError(song.file.clone(), e),
-                         detail: None
-                     }));
+        let recording_id = tags.get("MUSICBRAINZ_TRACKID")
+            .ok_or_else(|| {
+                EdaboError {
+                    kind: ErrorKind::MissingTagError(
+                        song.file.clone(),
+                        String::from("recordingid"),
+                    ),
+                    detail: None,
+                }
+            })
+            .and_then(|value| {
+                Uuid::parse_str(value).map_err(|e| {
+                    EdaboError {
+                        kind: ErrorKind::UuidError(song.file.clone(), e),
+                        detail: None,
+                    }
+                })
+            });
 
         // The release id and release track id are optional, but if the tags
         // exist, they should contain uuids
         let release_id: Result<Option<Uuid>> = match tags.get("MUSICBRAINZ_ALBUMID") {
             None => Ok(None),
-            Some(value) =>
-                Uuid::parse_str(value).
-                map_err(|e|
-                        EdaboError{
+            Some(value) => {
+                Uuid::parse_str(value)
+                    .map_err(|e| {
+                        EdaboError {
                             kind: ErrorKind::UuidError(song.file.clone(), e),
-                            detail: None
+                            detail: None,
                         }
-                ).and_then(|v| Ok(Some(v)))
+                    })
+                    .and_then(|v| Ok(Some(v)))
+            }
         };
 
         let release_track_id = match tags.get("MUSICBRAINZ_RELEASETRACKID") {
             None => Ok(None),
-            Some(value) =>
-                Uuid::parse_str(value).
-                map_err(|e|
-                        EdaboError{
+            Some(value) => {
+                Uuid::parse_str(value)
+                    .map_err(|e| {
+                        EdaboError {
                             kind: ErrorKind::UuidError(song.file.clone(), e),
-                            detail: None
+                            detail: None,
                         }
-                ).and_then(|v| Ok(Some(v)))
+                    })
+                    .and_then(|v| Ok(Some(v)))
+            }
         };
 
         // TODO: Use collect over Vec<Result<Uuid, EdaboError>> or something
         // similar here
-        recording_id.
-            and_then(|id|
-                     release_id.
-                     and_then(|relid|
-                              release_track_id.
-                              and_then(|rtid|
-                                       Ok(
-                                           Track{
-                                               recording_id: id,
-                                               release_id: relid,
-                                               release_track_id: rtid,
-                                           }
-                                       )
-                              )
-                     )
-            )
+        recording_id.and_then(|id| {
+            release_id.and_then(|relid| {
+                release_track_id.and_then(|rtid| {
+                    Ok(Track {
+                        recording_id: id,
+                        release_id: relid,
+                        release_track_id: rtid,
+                    })
+                })
+            })
+        })
     }
 }
 
 impl Playlist {
     pub fn from_file<P>(path: P) -> result::Result<Playlist, EdaboError>
-        where P: AsRef<Path>,
+    where
+        P: AsRef<Path>,
     {
-        File::open(path).
-            map_err(From::from).
-            and_then(|file|
-                     serde_json::from_reader(file).map_err(From::from)
-            )
+        File::open(path).map_err(From::from).and_then(|file| {
+            serde_json::from_reader(file).map_err(From::from)
+        })
     }
 
-    pub fn from_name(name: &str) -> result::Result<Playlist, EdaboError>
-    {
-        get_playlist_dir().
-            and_then(|mut path| {
-                path.push(name);
-                path.set_extension("edabo");
-                Playlist::from_file(path)
-            })
+    pub fn from_name(name: &str) -> result::Result<Playlist, EdaboError> {
+        get_playlist_dir().and_then(|mut path| {
+            path.push(name);
+            path.set_extension("edabo");
+            Playlist::from_file(path)
+        })
     }
 
-    pub fn from_str(s: &str) -> result::Result<Playlist, EdaboError>
-    {
+    pub fn from_str(s: &str) -> result::Result<Playlist, EdaboError> {
         serde_json::from_str(s).map_err(From::from)
     }
 
     pub fn to_file(self: &Self) -> Option<EdaboError> {
-        get_playlist_dir().
-            and_then(|mut path| {
+        get_playlist_dir()
+            .and_then(|mut path| {
                 path.push(&self.name);
                 path.set_extension("edabo");
                 File::create(path).map_err(From::from)
-            }).
-            and_then(|mut file|
-                     serde_json::to_writer_pretty(&mut file, self).map_err(From::from)
-            ).err()
+            })
+            .and_then(|mut file| {
+                serde_json::to_writer_pretty(&mut file, self).map_err(From::from)
+            })
+            .err()
     }
 
     pub fn new(name: String, description: Option<String>, tracklist: HashSet<Track>) -> Playlist {
@@ -151,10 +153,8 @@ impl Playlist {
 
 impl PartialEq for Playlist {
     fn eq(self: &Playlist, other: &Playlist) -> bool {
-        self.name == other.name &&
-            self.description == other.description &&
-            self.tracklist == other.tracklist &&
-            self.uuid == other.uuid
+        self.name == other.name && self.description == other.description &&
+            self.tracklist == other.tracklist && self.uuid == other.uuid
     }
 }
 
@@ -186,7 +186,7 @@ pub enum ErrorKind {
 #[derive(Debug)]
 pub struct EdaboError {
     pub kind: ErrorKind,
-    pub detail: Option<String>
+    pub detail: Option<String>,
 }
 
 impl Error for EdaboError {
@@ -203,33 +203,37 @@ impl fmt::Display for EdaboError {
 
 impl From<IOError> for EdaboError {
     fn from(e: IOError) -> EdaboError {
-        EdaboError{
+        EdaboError {
             kind: ErrorKind::IoError(e),
-            detail: None}
+            detail: None,
+        }
     }
 }
 
 impl From<MPDError> for EdaboError {
     fn from(e: MPDError) -> EdaboError {
-        EdaboError{
+        EdaboError {
             kind: ErrorKind::MpdError(e),
-            detail: None}
+            detail: None,
+        }
     }
 }
 
 impl From<serde_json::Error> for EdaboError {
     fn from(e: serde_json::Error) -> EdaboError {
-        EdaboError{
+        EdaboError {
             kind: ErrorKind::JsonError(e),
-            detail: None}
+            detail: None,
+        }
     }
 }
 
 impl From<BaseDirectoriesError> for EdaboError {
     fn from(e: BaseDirectoriesError) -> EdaboError {
-        EdaboError{
+        EdaboError {
             kind: ErrorKind::XdgError(e),
-            detail: None}
+            detail: None,
+        }
     }
 }
 

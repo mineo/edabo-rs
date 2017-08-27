@@ -7,20 +7,31 @@ pub fn connect() -> Result<Client> {
 }
 
 pub fn current_playlist() -> Result<Playlist> {
-    connect().
-        and_then(|mut conn| conn.queue().map_err(From::from)).
-        and_then(|queue| queue.iter().map(|song| Track::from_song(song)).collect()).
-        and_then(|tracks|
-                 Ok(Playlist::new("Current".to_string(),
-                                  Some("The current playlist".to_string()),
-                                  tracks)))
+    connect()
+        .and_then(|mut conn| conn.queue().map_err(From::from))
+        .and_then(|queue| {
+            queue.iter().map(|song| Track::from_song(song)).collect()
+        })
+        .and_then(|tracks| {
+            Ok(Playlist::new(
+                "Current".to_string(),
+                Some("The current playlist".to_string()),
+                tracks,
+            ))
+        })
 }
 
 pub fn current_track() -> Result<Track> {
-    connect().
-        and_then(|mut conn| conn.currentsong().map_err(From::from)).
-        and_then(|optsong| optsong.
-                 ok_or_else(|| EdaboError{ kind: ErrorKind::NoCurrentSong,
-                                           detail: None}).
-                 and_then(|s| Track::from_song(&s)))
+    connect()
+        .and_then(|mut conn| conn.currentsong().map_err(From::from))
+        .and_then(|optsong| {
+            optsong
+                .ok_or_else(|| {
+                    EdaboError {
+                        kind: ErrorKind::NoCurrentSong,
+                        detail: None,
+                    }
+                })
+                .and_then(|s| Track::from_song(&s))
+        })
 }

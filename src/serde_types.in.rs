@@ -4,11 +4,11 @@ use std::option::Option;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct Track {
-    #[serde(rename="recordingid")]
+    #[serde(rename = "recordingid")]
     pub recording_id: Uuid,
-    #[serde(rename="releaseid")]
+    #[serde(rename = "releaseid")]
     pub release_id: Option<Uuid>,
-    #[serde(rename="releasetrackid")]
+    #[serde(rename = "releasetrackid")]
     pub release_track_id: Option<Uuid>,
 }
 
@@ -19,5 +19,4 @@ pub struct Playlist {
     pub tracklist: LinkedHashMap<Uuid, Track>,
     pub timestamp: DateTime<UTC>,
     pub uuid: Uuid,
-
 }
