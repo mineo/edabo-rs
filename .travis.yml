@@ -4,6 +4,13 @@ rust:
   - stable
   - beta
   - nightly
+env:
+  - JOB=test
+  - JOB=rustfmt
 matrix:
   allow_failures:
     - rust: nightly
+before_install:
+  - cargo install rustfmt
+script:
+  - ./travis/travis.sh
