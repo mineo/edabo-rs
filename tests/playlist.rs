@@ -4,6 +4,7 @@ extern crate serde_json;
 extern crate uuid;
 
 use edabo::types::{Playlist, Track};
+use std::collections::HashSet;
 
 fn get_playlist() -> Playlist {
     let track = Track {
@@ -12,9 +13,12 @@ fn get_playlist() -> Playlist {
         recording_id: uuid::Uuid::parse_str("fefd550f-b68e-4c11-b4d6-dfb4836a820e").unwrap()
     };
 
+    let mut tracklist = HashSet::new();
+    tracklist.insert(track);
+
     Playlist::new("foo".to_string(),
                   None,
-                  vec![track])
+                  tracklist)
 }
 
 #[test]

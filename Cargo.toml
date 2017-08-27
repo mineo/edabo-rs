@@ -2,19 +2,16 @@
 name = "edabo"
 version = "0.1.0"
 authors = ["Wieland Hoffmann <themineo@gmail.com>"]
-build = "build.rs"
-
-[build-dependencies]
-serde_codegen = "0.8"
 
 [dependencies]
 clap = "2.19"
-chrono = { version = "0.2", features = ["serde"] }
-linked-hash-map = { version = "0.3.0", features = ["serde_impl"] }
+chrono = { version = "0.4", features = ["serde"] }
+linked-hash-map = { version = "0.5.0", features = ["serde_impl"] }
 mpd = { git = "https://github.com/kstep/rust-mpd.git" }
-serde = "0.8"
-serde_json = "0.8"
-uuid = { version = "0.3", features = ["serde", "v4"] }
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+uuid = { version = "0.5", features = ["serde", "v4"] }
 xdg = "2.0.0"
 
 [[bin]]

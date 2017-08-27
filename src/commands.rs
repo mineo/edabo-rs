@@ -97,15 +97,16 @@ impl Command for AddCommand {
                      match args.is_present("all") {
                          true => empd::current_playlist().
                              and_then(|pl| {
-                                 for (uuid, track) in pl.tracklist {
-                                     playlist_to_modify.tracklist.insert(uuid, track);
-                                 }
+                                 for track in pl.tracklist.into_iter() {
+                                     playlist_to_modify.tracklist.insert(track);
+                                     ()
+                                 };
                                  Ok(playlist_to_modify)
                              }
                              ),
                          false => empd::current_track().
                              and_then(|track| {
-                                 playlist_to_modify.tracklist.insert(track.recording_id, track);
+                                 playlist_to_modify.tracklist.insert(track);
                                  Ok(playlist_to_modify)
                              })
                      }
@@ -158,7 +159,8 @@ impl Command for LoadCommand {
                              }
                          }
 
-                         playlist.tracklist.keys().map(|recid| {
+                         playlist.tracklist.iter().map(|track| {
+                             let recid = track.recording_id;
                              let tag = Term::Tag("MUSICBRAINZ_TRACKID".into());
                              let id = recid.hyphenated().to_string();
                              let mut query = Query::new();
